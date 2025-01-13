@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #333;
+            padding: 10px;
+        }
+
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            font-size: 16px;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        section {
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .feedback-link {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+
+        .feedback-link:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome, {{ citizen.name }}!</h1>
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="/view-complaints">View Complaints</a></li>
+            <li><a href="/register-complaint">Register Complaint</a></li>
+            <li><a href="/update-profile">Update Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Your Details</h2>
+            <ul>
+                <li><strong>Name:</strong> {{ citizen.name }}</li>
+                <li><strong>Email:</strong> {{ citizen.email }}</li>
+                <li><strong>Contact Number:</strong> {{ citizen.contact_number }}</li>
+                <li><strong>Address:</strong> {{ citizen.address }}</li>
+                <li><strong>Gender:</strong> {{ citizen.gender }}</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Recent Complaints</h2>
+            {% if complaints %}
+                <ul>
+                    {% for complaint in complaints %}
+                        <li>{{ complaint.title }} - Status: {{ complaint.status }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No complaints registered yet.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Feedback</h2>
+            <p>If your complaints are resolved, you can <a class="feedback-link" href="/feedback-form">fill out the feedback form</a>.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Complaint Management System</p>
+    </footer>
+</body>
+</html>

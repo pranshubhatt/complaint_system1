@@ -1,0 +1,89 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #007BFF;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.container {
+    max-width: 600px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+form label {
+    display: block;
+    font-weight: bold;
+    margin: 1rem 0 0.5rem;
+    color: #555;
+}
+
+form input,
+form select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+form input:focus,
+form select:focus {
+    outline: none;
+    border-color: #007BFF;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.nav-links {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #007BFF;
+    font-weight: bold;
+    margin: 0 1rem;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}

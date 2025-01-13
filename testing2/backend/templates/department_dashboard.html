@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Welcome to Department Dashboard</h2>
+        <h3>Filter Complaints by Priority</h3>
+        
+        <form method="GET" action="/filter_complaints">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+            
+            <button type="submit">Filter Complaints</button>
+        </form>
+        
+        <div id="complaints-list">
+            <!-- Complaints filtered by priority will be displayed here -->
+        </div>
+    </div>
+</body>
+</html>
