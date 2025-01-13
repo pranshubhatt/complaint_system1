@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 
 # Set up the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:$ujay#Edge24@localhost/complaint_system'  # Replace with actual credentials
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/complaint_system'  # Replace with actual credentials
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your_secret_key_here'  # Update with a secure secret key
 db = SQLAlchemy(app)
