@@ -201,7 +201,6 @@ def citizen_dashboard():
     return render_template('citizen_dashboard.html', citizen=citizen, complaints=complaints)
 
 # Department Dashboard Route
-from datetime import datetime  # Add this import
 
 @app.route('/department-dashboard', methods=['GET', 'POST'])
 def department_dashboard():
@@ -238,34 +237,27 @@ def department_dashboard():
         complaint.latest_remarks = latest_log.remarks if latest_log else "No remarks yet"
 
     if request.method == 'POST':
-        complaint_id = request.form.get('complaint_id')
-        status = request.form.get('status')
-        remarks = request.form.get('remarks')
+        for complaint in complaints:
+            complaint_id = request.form.get(f'complaint_id_{complaint.complaint_id}')
+            status = request.form.get(f'status_{complaint.complaint_id}')
+            remarks = request.form.get(f'remarks_{complaint.complaint_id}')
 
-        complaint = Complaint.query.get(complaint_id)
-        if complaint:
-            # Create a new entry in ComplaintLog for status and remarks
-            log_entry = ComplaintLog(
-                complaint_id=complaint.complaint_id,
-                status=status,
-                remarks=remarks,
-                timestamp=datetime.now()  # Correct usage
-            )
-            db.session.add(log_entry)
-            db.session.commit()
+            if complaint_id:
+                # Create a new entry in ComplaintLog for status and remarks
+                log_entry = ComplaintLog(
+                    complaint_id=complaint_id,
+                    status=status,
+                    remarks=remarks,
+                    timestamp=datetime.now()
+                )
+                db.session.add(log_entry)
+                db.session.commit()
 
-            # Fetch the updated complaint and its latest log entry again after the update
-            complaint = Complaint.query.get(complaint_id)
-            latest_log = ComplaintLog.query.filter_by(complaint_id=complaint.complaint_id).order_by(ComplaintLog.timestamp.desc()).first()
-
-            # Update the status and remarks to the complaint object for frontend rendering
-            complaint.latest_status = latest_log.status if latest_log else "Pending"
-            complaint.latest_remarks = latest_log.remarks if latest_log else "No remarks yet"
-
-            # Ensure the updated complaint is reflected in the complaints list
-            complaints = Complaint.query.filter_by(department_id=department_id).order_by(Complaint.priority.asc()).all()
-            for complaint in complaints:
+                # Fetch the updated complaint and its latest log entry again after the update
+                complaint = Complaint.query.get(complaint_id)
                 latest_log = ComplaintLog.query.filter_by(complaint_id=complaint.complaint_id).order_by(ComplaintLog.timestamp.desc()).first()
+
+                # Update the status and remarks to the complaint object for frontend rendering
                 complaint.latest_status = latest_log.status if latest_log else "Pending"
                 complaint.latest_remarks = latest_log.remarks if latest_log else "No remarks yet"
 
