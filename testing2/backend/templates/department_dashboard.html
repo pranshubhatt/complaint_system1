@@ -190,17 +190,17 @@
                     <p><strong>Current Status:</strong> {{ complaint.latest_status }}</p>
                     <p><strong>Remarks:</strong> {{ complaint.latest_remarks }}</p>
 
-                    <label for="status">Update Status:</label>
-                    <select name="status" id="status" required>
+                    <label for="status_{{ complaint.complaint_id }}">Update Status:</label>
+                    <select name="status_{{ complaint.complaint_id }}" id="status_{{ complaint.complaint_id }}" required>
                         <option value="In-progress" {% if complaint.latest_status == 'In-progress' %}selected{% endif %}>In-progress</option>
                         <option value="Resolved" {% if complaint.latest_status == 'Resolved' %}selected{% endif %}>Resolved</option>
                         <option value="Not resolved" {% if complaint.latest_status == 'Not resolved' %}selected{% endif %}>Not resolved</option>
                     </select>
 
-                    <label for="remarks">Add Remarks:</label>
-                    <textarea name="remarks" id="remarks" rows="4" required></textarea>
+                    <label for="remarks_{{ complaint.complaint_id }}">Add Remarks:</label>
+                    <textarea name="remarks_{{ complaint.complaint_id }}" id="remarks_{{ complaint.complaint_id }}" rows="4" required></textarea>
 
-                    <input type="hidden" name="complaint_id" value="{{ complaint.complaint_id }}">
+                    <input type="hidden" name="complaint_id_{{ complaint.complaint_id }}" value="{{ complaint.complaint_id }}">
                     <button type="submit">Update</button>
                 </div>
             {% endfor %}
