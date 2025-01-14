@@ -6,23 +6,32 @@
     <title>Citizen Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
+        /* Global Styles */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background-color: #f0f4f8;
+            animation: fadeIn 1s ease-in-out;
         }
 
         header {
             background-color: #007BFF;
             color: white;
-            padding: 20px;
+            padding: 30px;
             text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         nav {
             background-color: #333;
-            padding: 10px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        nav:hover {
+            background-color: #444;
         }
 
         nav ul {
@@ -34,34 +43,64 @@
         }
 
         nav ul li {
-            margin: 0 15px;
+            margin: 0 20px;
         }
 
         nav ul li a {
             text-decoration: none;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background-color: #28a745;
+            left: 50%;
+            bottom: -5px;
+            transition: width 0.3s ease, left 0.3s ease;
         }
 
         nav ul li a:hover {
-            text-decoration: underline;
+            color: #28a745;
+        }
+
+        nav ul li a:hover::after {
+            width: 100%;
+            left: 0;
         }
 
         main {
             max-width: 900px;
-            margin: 20px auto;
+            margin: 40px auto;
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: slideUp 1s ease-out;
         }
 
         section {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        h2 {
+        section:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        h2, h3 {
             color: #333;
+            margin-bottom: 20px;
         }
 
         ul {
@@ -70,33 +109,62 @@
         }
 
         ul li {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-size: 16px;
+            color: #555;
+            transition: color 0.3s ease;
         }
 
-        footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #333;
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+        ul li:hover {
+            color: #007BFF;
         }
 
         .feedback-link {
             display: inline-block;
             background-color: #28a745;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 20px;
             border-radius: 5px;
             text-decoration: none;
-            margin-top: 15px;
+            transition: background-color 0.3s ease;
         }
 
         .feedback-link:hover {
             background-color: #218838;
         }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #333;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -106,9 +174,7 @@
     
     <nav>
         <ul>
-            <li><a href="/view-complaints">View Complaints</a></li>
             <li><a href="/register-complaint">Register Complaint</a></li>
-            <li><a href="/update-profile">Update Profile</a></li>
             <li><a href="/logout">Logout</a></li>
         </ul>
     </nav>
@@ -130,7 +196,10 @@
             {% if complaints %}
                 <ul>
                     {% for complaint in complaints %}
-                        <li>{{ complaint.title }} - Status: {{ complaint.status }}</li>
+                        <li>
+                            {{ complaint.title }} - Status: {{ complaint.status }} | 
+                            <a href="{{ url_for('view_complaint', complaint_id=complaint.complaint_id) }}">View Complaint</a>
+                        </li>
                     {% endfor %}
                 </ul>
             {% else %}
