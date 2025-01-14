@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+import datetime
+from flask import Flask, render_template, request, redirect, url_for, session , flash
 from flask_sqlalchemy import SQLAlchemy
 from nlp import preprocess_text, categorize_complaint, assign_priority,  analyze_sentiment
-
+from datetime import datetime
 
 import nltk
 
@@ -16,7 +17,7 @@ app = Flask(__name__)
 # Set up the database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/complaint_system'  # Replace with actual credentials
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your_secret_key_here'  # Update with a secure secret key , Optional
+app.config['SECRET_KEY'] = 'your_secret_key_here'  # Update with a secure secret key
 db = SQLAlchemy(app)
 
 # Define models for the database
@@ -29,6 +30,8 @@ class Citizen(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     address = db.Column(db.String(200), nullable=True)
     gender = db.Column(db.String(10), nullable=True)
+
+    complaints = db.relationship('Complaint', backref='citizen', lazy=True)
 
 class Complaint(db.Model):
     __tablename__ = 'complaints'
@@ -51,6 +54,17 @@ class Department(db.Model):
     email = db.Column(db.String(50), unique=True)
     address = db.Column(db.String(100))
 
+class ComplaintLog(db.Model):
+    __tablename__ = 'complaint_log'
+
+    log_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    complaint_id = db.Column(db.Integer, db.ForeignKey('complaints.complaint_id'), nullable=False)
+    status = db.Column(db.Enum('In-progress', 'Resolved', 'Not resolved'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+    remarks = db.Column(db.Text)
+
+    # Relationship to link logs to the complaint
+    complaint = db.relationship('Complaint', backref=db.backref('logs', cascade='all, delete-orphan'))
 
 # Home route
 @app.route('/')
@@ -131,12 +145,11 @@ def register_complaint():
     return render_template('register_complaint.html', citizen=citizen)
 
 
-
-
 # Logout Route
 @app.route('/logout')
 def logout():
     session.pop('citizen_id', None)
+    session.pop('department_id', None)
     return redirect(url_for('index'))
 
 # Department Registration Route
@@ -167,11 +180,14 @@ def department_login():
         
         department = Department.query.filter_by(email=email, contact_number=contact_number).first()
         if department:
-            return redirect(url_for('index'))
+            session['department_id'] = department.department_id  # Store department_id in session
+            return redirect(url_for('department_dashboard'))
         else:
             error = 'Invalid login credentials. Please try again.'
 
     return render_template('department_login.html', error=error)
+
+
 
 # Citizen Dashboard Route
 @app.route('/citizen-dashboard')
@@ -183,6 +199,130 @@ def citizen_dashboard():
     citizen = Citizen.query.get(citizen_id)
     complaints = Complaint.query.filter_by(citizen_id=citizen_id).all()
     return render_template('citizen_dashboard.html', citizen=citizen, complaints=complaints)
+
+# Department Dashboard Route
+from datetime import datetime  # Add this import
+
+@app.route('/department-dashboard', methods=['GET', 'POST'])
+def department_dashboard():
+    if 'department_id' not in session:
+        return redirect(url_for('department_login'))
+
+    department_id = session['department_id']
+    selected_status = request.args.get('status', 'all')  # Filter by status (optional)
+
+    # Mapping of department ID to name
+    department_names = {
+        1: "Sanitation",
+        2: "Water",
+        3: "Infrastructure",
+        4: "Public Safety",
+        5: "General"
+    }
+
+    department_name = department_names.get(department_id, "Unknown Department")
+
+    # Query complaints for the department, sorting by priority
+    query = Complaint.query.filter_by(department_id=department_id)
+
+    if selected_status != 'all':
+        query = query.join(ComplaintLog).filter(ComplaintLog.status == selected_status)
+
+    # Sort complaints by priority (assuming priority is an integer or comparable field)
+    complaints = query.order_by(Complaint.priority.asc()).all()  # Sort by priority in ascending order
+
+    # Add latest status and remarks for each complaint
+    for complaint in complaints:
+        latest_log = ComplaintLog.query.filter_by(complaint_id=complaint.complaint_id).order_by(ComplaintLog.timestamp.desc()).first()
+        complaint.latest_status = latest_log.status if latest_log else "Pending"
+        complaint.latest_remarks = latest_log.remarks if latest_log else "No remarks yet"
+
+    if request.method == 'POST':
+        complaint_id = request.form.get('complaint_id')
+        status = request.form.get('status')
+        remarks = request.form.get('remarks')
+
+        complaint = Complaint.query.get(complaint_id)
+        if complaint:
+            # Create a new entry in ComplaintLog for status and remarks
+            log_entry = ComplaintLog(
+                complaint_id=complaint.complaint_id,
+                status=status,
+                remarks=remarks,
+                timestamp=datetime.now()  # Correct usage
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+
+            # Fetch the updated complaint and its latest log entry again after the update
+            complaint = Complaint.query.get(complaint_id)
+            latest_log = ComplaintLog.query.filter_by(complaint_id=complaint.complaint_id).order_by(ComplaintLog.timestamp.desc()).first()
+
+            # Update the status and remarks to the complaint object for frontend rendering
+            complaint.latest_status = latest_log.status if latest_log else "Pending"
+            complaint.latest_remarks = latest_log.remarks if latest_log else "No remarks yet"
+
+            # Ensure the updated complaint is reflected in the complaints list
+            complaints = Complaint.query.filter_by(department_id=department_id).order_by(Complaint.priority.asc()).all()
+            for complaint in complaints:
+                latest_log = ComplaintLog.query.filter_by(complaint_id=complaint.complaint_id).order_by(ComplaintLog.timestamp.desc()).first()
+                complaint.latest_status = latest_log.status if latest_log else "Pending"
+                complaint.latest_remarks = latest_log.remarks if latest_log else "No remarks yet"
+
+    return render_template('department_dashboard.html', complaints=complaints, selected_status=selected_status, department_name=department_name)
+
+# View Complaints Route
+@app.route('/view-complaint/<int:complaint_id>', methods=['GET'])
+def view_complaint(complaint_id):
+    complaint = Complaint.query.get(complaint_id)
+
+    if not complaint:
+        return "Complaint not found", 404
+
+    # Fetch the latest log entry based on the timestamp for the specific complaint
+    latest_log = ComplaintLog.query.filter_by(complaint_id=complaint_id).order_by(ComplaintLog.timestamp.desc()).first()
+
+    # Fetch all logs for the complaint
+    logs = ComplaintLog.query.filter_by(complaint_id=complaint_id).order_by(ComplaintLog.timestamp.desc()).all()
+
+    return render_template('view_complaint.html', complaint=complaint, latest_log=latest_log, logs=logs)
+
+
+# Update Complaint Status Route
+@app.route('/update-complaint-status/<int:complaint_id>', methods=['GET', 'POST'])
+def update_complaint_status(complaint_id):
+    if 'department_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('department_login'))
+
+    # Fetch the complaint for the logged-in department
+    complaint = Complaint.query.get(complaint_id)
+    if not complaint or complaint.department_id != session['department_id']:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('department_dashboard'))
+
+    if request.method == 'POST':
+        status = request.form.get('status')
+        remarks = request.form.get('remarks')
+
+        if not status or not remarks:
+            flash('Please provide both status and remarks.', 'warning')
+            return redirect(url_for('update_complaint_status', complaint_id=complaint_id))
+
+        # Add a new log entry to the ComplaintLog table
+        log = ComplaintLog(
+            complaint_id=complaint_id,
+            status=status,
+            remarks=remarks,
+            timestamp=datetime.now()  # Ensure timestamp is recorded
+        )
+        db.session.add(log)
+        db.session.commit()  # Commit changes to the database
+
+        flash('Complaint updated successfully.', 'success')
+        return redirect(url_for('department_dashboard'))
+
+    return render_template('update_complaint.html', complaint=complaint)
 
 
 # Run the application
