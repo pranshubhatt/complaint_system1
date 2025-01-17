@@ -4,9 +4,11 @@ try:
     connection = pymysql.connect(
         host='localhost',
         user='root',
-        password='$ujay#Edge24',  # Replace with your actual password
-        database='complaint_system'
+        password='1234',
+        database='complaint_system',
+        port=3306
     )
     print("Connection successful!")
+    connection.close()
 except Exception as e:
     print(f"Connection failed: {e}")
